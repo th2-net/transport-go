@@ -149,6 +149,8 @@ func decodeRawMessage(src []byte) (*RawMessage, error) {
 			message.Protocol = string(partBytes)
 		case rawBodyCodecType:
 			message.Body = partBytes
+		case eventIdCodecType:
+			message.EventID = decodeEventId(partBytes)
 		}
 		pos += partL
 		if err != nil {
@@ -182,6 +184,8 @@ func decodeParsedMessage(src []byte) (*ParsedMessage, error) {
 			message.MessageType = string(partBytes)
 		case parsedBodyCodecType:
 			message.CborBody = partBytes
+		case eventIdCodecType:
+			message.EventID = decodeEventId(partBytes)
 		}
 		pos += partL
 		if err != nil {
@@ -225,4 +229,31 @@ func decodeMessageId(src []byte) (MessageId, error) {
 		pos += partL
 	}
 	return id, nil
+}
+
+func decodeEventId(src []byte) *EventID {
+	id := new(EventID)
+	pos := 0
+	for {
+		if pos == len(src) {
+			break
+		}
+		codecT, r := readType(src[pos:])
+		pos += r
+		partL, r := readLength(src[pos:])
+		pos += r
+		partBytes := src[pos : pos+partL]
+		switch codecT {
+		case idCodecType:
+			id.ID = string(partBytes)
+		case bookCodecType:
+			id.Book = string(partBytes)
+		case scopeCodecType:
+			id.Scope = string(partBytes)
+		case timestampCodecType:
+			id.Timestamp, _ = readTimestamp(partBytes)
+		}
+		pos += partL
+	}
+	return id
 }

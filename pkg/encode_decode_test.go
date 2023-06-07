@@ -53,6 +53,28 @@ func TestEncodeDecode(t *testing.T) {
 			},
 		},
 		{
+			name: "single raw with event ID",
+			messages: []holder{
+				{
+					groupId: 0,
+					msg: &transport.RawMessage{
+						MessageId: transport.MessageId{
+							SessionAlias: "alias1",
+							Direction:    transport.IncomingDirection,
+							Sequence:     42,
+							Timestamp:    transport.TimestampFromTime(time.Now()),
+						},
+						EventID:  transport.NewEventID("id", "book", "scope", transport.TimestampFromTime(time.Now())),
+						Protocol: "protocol",
+						Metadata: map[string]string{
+							"key": "value",
+						},
+						Body: []byte("test_data"),
+					},
+				},
+			},
+		},
+		{
 			name: "several sub sequences",
 			messages: []holder{
 				{
@@ -87,6 +109,30 @@ func TestEncodeDecode(t *testing.T) {
 							Subsequence:  []int32{1},
 							Timestamp:    transport.TimestampFromTime(time.Now()),
 						},
+						MessageType: "TestType",
+						Protocol:    "protocol",
+						Metadata: map[string]string{
+							"key": "value",
+						},
+						CborBody: []byte("test_data"),
+					},
+				},
+			},
+		},
+		{
+			name: "single parsed with event ID",
+			messages: []holder{
+				{
+					groupId: 0,
+					msg: &transport.ParsedMessage{
+						MessageId: transport.MessageId{
+							SessionAlias: "alias1",
+							Direction:    transport.IncomingDirection,
+							Sequence:     42,
+							Subsequence:  []int32{1},
+							Timestamp:    transport.TimestampFromTime(time.Now()),
+						},
+						EventID:     transport.NewEventID("id", "book", "scope", transport.TimestampFromTime(time.Now())),
 						MessageType: "TestType",
 						Protocol:    "protocol",
 						Metadata: map[string]string{

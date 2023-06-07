@@ -17,11 +17,19 @@ package transport
 
 import "time"
 
+type EventID struct {
+	ID        string
+	Book      string
+	Scope     string
+	Timestamp Timestamp
+}
+
 type RawMessage struct {
 	MessageId MessageId
 	Metadata  Metadata
 	Protocol  Protocol
 	Body      []byte
+	EventID   *EventID
 }
 
 type ParsedMessage struct {
@@ -30,6 +38,7 @@ type ParsedMessage struct {
 	Protocol    Protocol
 	MessageType string
 	CborBody    []byte
+	EventID     *EventID
 }
 
 type MessageType = string
@@ -76,3 +85,12 @@ func TimestampFromTime(t time.Time) Timestamp {
 type Metadata = map[string]string
 
 type Protocol = string
+
+func NewEventID(id, book, scope string, timestamp Timestamp) *EventID {
+	return &EventID{
+		ID:        id,
+		Scope:     scope,
+		Book:      book,
+		Timestamp: timestamp,
+	}
+}

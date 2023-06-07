@@ -147,6 +147,7 @@ func (e *Encoder) writeRawMessage(message RawMessage) {
 	e.writeMetadata(message.Metadata)
 	e.writeProtocol(message.Protocol)
 	e.writeBody(message.Body, rawBodyCodecType)
+	e.writeEventId(message.EventID)
 
 	_ = writeLen(e.dst[lenIndex:], e.wrInx-lenIndex-lengthSize)
 }
@@ -162,6 +163,8 @@ func (e *Encoder) writeParsedMessage(message ParsedMessage) {
 	e.writeProtocol(message.Protocol)
 	e.writeMessageType(message.MessageType)
 	e.writeBody(message.CborBody, parsedBodyCodecType)
+	e.writeEventId(message.EventID)
+
 	_ = writeLen(e.dst[lenIndex:], e.wrInx-lenIndex-lengthSize)
 }
 
@@ -223,4 +226,23 @@ func (e *Encoder) writeBody(body []byte, bodyCodecType codecType) {
 func (e *Encoder) writeMessageType(messageType string) {
 	e.ensureWritable(1 + 4 + len(messageType))
 	e.wrInx += writeString(e.buf(), messageTypeCodecType, messageType)
+}
+
+func (e *Encoder) writeEventId(id *EventID) {
+	if id == nil {
+		return
+	}
+	payloadLen := (1 + 4 + len(id.ID)) +
+		(1 + 4 + len(id.Book)) +
+		(1 + 4 + len(id.Scope)) +
+		(1 + 4 + 8 + 4)
+	totalLength := 1 + 4 + payloadLen
+	e.ensureWritable(totalLength)
+	e.wrInx += writeType(e.buf(), eventIdCodecType)
+	e.wrInx += writeLen(e.buf(), payloadLen)
+
+	e.wrInx += writeString(e.buf(), idCodecType, id.ID)
+	e.wrInx += writeString(e.buf(), bookCodecType, id.Book)
+	e.wrInx += writeString(e.buf(), scopeCodecType, id.Scope)
+	e.wrInx += writeTime(e.buf(), id.Timestamp)
 }

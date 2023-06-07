@@ -39,6 +39,9 @@ const (
 	metadataCodecType      codecType = 11
 	protocolCodecType      codecType = 12
 	messageTypeCodecType   codecType = 13
+	idCodecType            codecType = 14
+	scopeCodecType         codecType = 15
+	eventIdCodecType       codecType = 16
 	rawMessageCodecType    codecType = 20
 	rawBodyCodecType       codecType = 21
 	parsedMessageCodecType codecType = 30
