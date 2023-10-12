@@ -257,3 +257,71 @@ func TestEncoder_EncodeParsed(t *testing.T) {
 
 	assert.Equal(t, expected, res)
 }
+
+func TestEncoder_CompleteBatch(t *testing.T) {
+	e := transport.NewEncoder(nil)
+	batch := e.CompleteBatch("group", "book")
+	expected := []byte{
+		0x32, // batch
+		0x22, 0x0, 0x0, 0x0,
+		0x33, // groups
+		0xa, 0x0, 0x0, 0x0,
+		0x28, // group
+		0x5, 0x0, 0x0, 0x0,
+		0x29, // msg list
+		0x0, 0x0, 0x0, 0x0,
+		0x65, // book
+		0x4, 0x0, 0x0, 0x0,
+		0x62, 0x6f, 0x6f, 0x6b,
+		0x66, // group
+		0x5, 0x0, 0x0, 0x0,
+		0x67, 0x72, 0x6f, 0x75, 0x70,
+	}
+
+	assert.Equal(t, expected, batch)
+}
+
+func TestEncoder_IsEmpty(t *testing.T) {
+	td := []struct {
+		name     string
+		supplier func() transport.Encoder
+		isEmpty  bool
+	}{
+		{
+			name: "empty batch",
+			supplier: func() transport.Encoder {
+				return transport.NewEncoder(nil)
+			},
+			isEmpty: true,
+		},
+		{
+			name: "batch with msg",
+			supplier: func() transport.Encoder {
+				e := transport.NewEncoder(nil)
+				e.EncodeRaw(transport.RawMessage{
+					MessageId: transport.MessageId{
+						SessionAlias: "alias",
+						Sequence:     42,
+						Direction:    transport.OutgoingDirection,
+						Timestamp:    transport.TimestampFromTime(time.UnixMilli(1682420400000)),
+					},
+					EventID:  transport.NewEventID("B", "book", "scope", transport.TimestampFromTime(time.UnixMilli(1682420400000))),
+					Protocol: "protocol",
+					Metadata: map[string]string{
+						"key": "value",
+					},
+					Body: []byte{41, 42, 43, 44, 45},
+				}, 0)
+				return e
+			},
+		},
+	}
+
+	for _, tc := range td {
+		t.Run(tc.name, func(t *testing.T) {
+			e := tc.supplier()
+
+			assert.Truef(t, e.IsEmpty() == tc.isEmpty, "unexpected empty result %v (%v)", e.IsEmpty(), tc.isEmpty)
+		})
+	}
+}

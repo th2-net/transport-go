@@ -82,3 +82,29 @@ func TestDecodesRawMessageWithEventId(t *testing.T) {
 		assert.Equal(t, "group", d.GetGroup(), "unexpected group")
 	}
 }
+
+func TestDecodesEmptyBatch(t *testing.T) {
+	emptyBatch := []byte{
+		0x32, // batch
+		0x22, 0x0, 0x0, 0x0,
+		0x33, // groups
+		0xa, 0x0, 0x0, 0x0,
+		0x28, // group
+		0x5, 0x0, 0x0, 0x0,
+		0x29, // msg list
+		0x0, 0x0, 0x0, 0x0,
+		0x65, // book
+		0x4, 0x0, 0x0, 0x0,
+		0x62, 0x6f, 0x6f, 0x6b,
+		0x66, // group
+		0x5, 0x0, 0x0, 0x0,
+		0x67, 0x72, 0x6f, 0x75, 0x70,
+	}
+	d := transport.NewDecoder(emptyBatch)
+
+	msg, _, err := d.NextMessage()
+	assert.Nil(t, msg, "unexpected message from batch")
+	assert.Nil(t, err, "unexpected error during decoding")
+	assert.Equal(t, "book", d.GetBook(), "unexpected book value")
+	assert.Equal(t, "group", d.GetGroup(), "unexpected group value")
+}

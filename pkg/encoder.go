@@ -42,7 +42,14 @@ func (e *Encoder) Reset() {
 	e.lastGroupOffset = 0
 }
 
+func (e *Encoder) IsEmpty() bool {
+	return e.wrInx == 0
+}
+
 func (e *Encoder) CompleteBatch(group, book string) []byte {
+	if e.IsEmpty() {
+		e.initBatchAndGroup(unsetGroup)
+	}
 	e.writeGroupEnd()
 	e.writeGroupListEnd()
 
