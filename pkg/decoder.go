@@ -100,6 +100,10 @@ func (d *Decoder) NextMessage() (msg any, groupId int, err error) {
 			return
 		}
 		codecT, r := readType(d.data())
+		if d.pos == 0 && codecT != groupBatchCodecType {
+			return nil, 0, fmt.Errorf("batch does not start with %d element (actual: %d)",
+				groupBatchCodecType, codecT)
+		}
 		d.pos += r
 		partL, r := readLength(d.data())
 		d.pos += r
