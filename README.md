@@ -1,4 +1,4 @@
-# th2-transport 0.0.1
+# th2-transport 0.0.2
 
 Library that provides decoding and encoding fot th2 transport protocol.
 
