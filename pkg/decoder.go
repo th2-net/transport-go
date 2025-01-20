@@ -24,7 +24,7 @@ func NewDecoder(batchData []byte) Decoder {
 	return Decoder{
 		batch:     batchData,
 		pos:       0,
-		lastGroup: unset_group,
+		lastGroup: unsetGroup,
 	}
 }
 

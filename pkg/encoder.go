@@ -18,10 +18,10 @@ package transport
 import "fmt"
 
 const (
-	unset_group      int = -1
-	type_len_size    int = 1 + 4
-	batch_start_size int = type_len_size * 2
-	group_start_size int = type_len_size * 2
+	unsetGroup       int = -1
+	typeLenSize    int = 1 + 4
+	batchStartSize int = typeLenSize * 2
+	groupStartSize int = typeLenSize * 2
 )
 
 type Encoder struct {
@@ -35,13 +35,13 @@ func NewEncoder(dst []byte) Encoder {
 	return Encoder{
 		dst:         dst,
 		wrInx:       0,
-		lastGroupId: unset_group,
+		lastGroupId: unsetGroup,
 	}
 }
 
 func (e *Encoder) Reset() {
 	e.wrInx = 0
-	e.lastGroupId = unset_group
+	e.lastGroupId = unsetGroup
 	e.lastGroupOffset = 0
 }
 
@@ -51,12 +51,12 @@ func (e *Encoder) IsEmpty() bool {
 
 func (e *Encoder) CompleteBatch(group, book string) []byte {
 	if e.IsEmpty() {
-		e.initBatchAndGroup(unset_group)
+		e.initBatchAndGroup(unsetGroup)
 	}
 	e.writeGroupEnd()
 	e.writeGroupListEnd()
 
-	e.ensureWritable(type_len_size + len(book) + type_len_size + len(group))
+	e.ensureWritable(typeLenSize + len(book) + typeLenSize + len(group))
 	e.wrInx += writeBook(e.buf(), book)
 	e.wrInx += writeGroup(e.buf(), group)
 	e.writeBatchEnd()
@@ -70,14 +70,14 @@ func (e *Encoder) EncodeRaw(message RawMessage, groupId int) {
 
 func (e *Encoder) SizeAfterEncodeRaw(group string, book string, message RawMessage, groupId int) int {
 	return e.computeBaseSize(groupId) +
-		type_len_size + // rew message
+		typeLenSize + // rew message
 		computeMessageIdSize(message.MessageId) +
 		computeMetadataSize(message.Metadata) +
 		computeProtocolSize(message.Protocol) +
 		computeBodySize(message.Body) +
 		computeEventIdSize(message.EventID) +
-		type_len_size + len(book) +
-		type_len_size + len(group)
+		typeLenSize + len(book) +
+		typeLenSize + len(group)
 }
 
 func (e *Encoder) EncodeParsed(message ParsedMessage, groupId int) {
@@ -87,22 +87,22 @@ func (e *Encoder) EncodeParsed(message ParsedMessage, groupId int) {
 
 func (e *Encoder) SizeAfterEncodeParsed(group string, book string, message ParsedMessage, groupId int) int {
 	return e.computeBaseSize(groupId) +
-		type_len_size + // parsed message
+		typeLenSize + // parsed message
 		computeMessageIdSize(message.MessageId) +
 		computeMetadataSize(message.Metadata) +
 		computeProtocolSize(message.Protocol) +
 		computeMessageTypeSize(message.MessageType) +
 		computeBodySize(message.CborBody) +
 		computeEventIdSize(message.EventID) +
-		type_len_size + len(book) +
-		type_len_size + len(group)
+		typeLenSize + len(book) +
+		typeLenSize + len(group)
 }
 
 func (e *Encoder) initBatchAndGroup(groupId int) {
 	if e.wrInx == 0 {
 		e.writeBatchStart()
 	}
-	if e.lastGroupId == unset_group {
+	if e.lastGroupId == unsetGroup {
 		e.writeGroupStart()
 		e.lastGroupId = groupId
 	}
@@ -116,10 +116,10 @@ func (e *Encoder) initBatchAndGroup(groupId int) {
 func (e *Encoder) computeBaseSize(groupId int) int {
 	size := e.wrInx
 	if size == 0 {
-		size += batch_start_size
+		size += batchStartSize
 	}
 	if e.lastGroupId != groupId {
-		size += group_start_size
+		size += groupStartSize
 	}
 	return size
 }
@@ -150,7 +150,7 @@ func max(a, b int) int {
 }
 
 func (e *Encoder) writeBatchStart() {
-	e.ensureWritable(batch_start_size)
+	e.ensureWritable(batchStartSize)
 	e.wrInx += writeType(e.buf(), groupBatchCodecType)
 	e.wrInx += writeLen(e.buf(), 0) // placeholder for batch length
 	e.wrInx += writeType(e.buf(), groupListCodecType)
@@ -158,7 +158,7 @@ func (e *Encoder) writeBatchStart() {
 }
 
 func (e *Encoder) writeGroupStart() {
-	e.ensureWritable(group_start_size)
+	e.ensureWritable(groupStartSize)
 	e.lastGroupOffset = e.wrInx
 	e.wrInx += writeType(e.buf(), messageGroupCodecType)
 	e.wrInx += writeLen(e.buf(), 0) // placeholder for group
@@ -168,13 +168,13 @@ func (e *Encoder) writeGroupStart() {
 
 func (e *Encoder) writeGroupEnd() {
 	groupLenIndex := e.lastGroupOffset + 1
-	messageListLenIndex := e.lastGroupOffset + type_len_size + 1
+	messageListLenIndex := e.lastGroupOffset + typeLenSize + 1
 	_ = writeLen(e.dst[groupLenIndex:], e.wrInx-groupLenIndex-lengthSize)
 	_ = writeLen(e.dst[messageListLenIndex:], e.wrInx-messageListLenIndex-lengthSize)
 }
 
 func (e *Encoder) writeGroupListEnd() {
-	groupListLenIdx := type_len_size + 1
+	groupListLenIdx := typeLenSize + 1
 	_ = writeLen(e.dst[groupListLenIdx:], e.wrInx-groupListLenIdx-lengthSize)
 }
 
@@ -184,7 +184,7 @@ func (e *Encoder) writeBatchEnd() {
 }
 
 func (e *Encoder) writeRawMessage(message RawMessage) {
-	e.ensureWritable(type_len_size)
+	e.ensureWritable(typeLenSize)
 	e.wrInx += writeType(e.buf(), rawMessageCodecType)
 	lenIndex := e.wrInx
 	e.wrInx += writeLen(e.buf(), 0) // placeholder for msg len
@@ -199,7 +199,7 @@ func (e *Encoder) writeRawMessage(message RawMessage) {
 }
 
 func (e *Encoder) writeParsedMessage(message ParsedMessage) {
-	e.ensureWritable(type_len_size)
+	e.ensureWritable(typeLenSize)
 	e.wrInx += writeType(e.buf(), parsedMessageCodecType)
 	lenIndex := e.wrInx
 	e.wrInx += writeLen(e.buf(), 0) // placeholder for msg len
@@ -215,45 +215,45 @@ func (e *Encoder) writeParsedMessage(message ParsedMessage) {
 }
 
 func (e *Encoder) writeMessageId(id MessageId) {
-	e.ensureWritable(type_len_size)
+	e.ensureWritable(typeLenSize)
 	e.wrInx += writeType(e.buf(), messageIdCodecType)
 	lenIndex := e.wrInx
 	e.wrInx += writeLen(e.buf(), 0) // placeholder for id len
 
-	e.ensureWritable(type_len_size + len(id.SessionAlias))
+	e.ensureWritable(typeLenSize + len(id.SessionAlias))
 	e.wrInx += writeString(e.buf(), sessionAliasCodecType, id.SessionAlias)
-	e.ensureWritable(type_len_size + 1)
+	e.ensureWritable(typeLenSize + 1)
 	e.wrInx += writeDirection(e.buf(), id.Direction)
-	e.ensureWritable(type_len_size + 8)
+	e.ensureWritable(typeLenSize + 8)
 	e.wrInx += writeLongValue(e.buf(), sequenceCodecType, id.Sequence)
-	e.ensureWritable(type_len_size + len(id.Subsequence)*(type_len_size+4))
+	e.ensureWritable(typeLenSize + len(id.Subsequence)*(typeLenSize+4))
 	e.wrInx += writeIntCollection(e.buf(), subsequenceCodecType, id.Subsequence)
-	e.ensureWritable(type_len_size + 8 + 4)
+	e.ensureWritable(typeLenSize + 8 + 4)
 	e.wrInx += writeTime(e.buf(), id.Timestamp)
 
 	_ = writeLen(e.dst[lenIndex:], e.wrInx-lenIndex-lengthSize)
 }
 
 func computeMessageIdSize(id MessageId) int {
-	return type_len_size + // message id
-		type_len_size + len(id.SessionAlias) + // alias
-		type_len_size + 1 + // direction
-		type_len_size + 8 + // sequence
-		type_len_size + len(id.Subsequence)*(type_len_size+4) + // subsequence
-		type_len_size + 8 + 4 // timestamp
+	return typeLenSize + // message id
+		typeLenSize + len(id.SessionAlias) + // alias
+		typeLenSize + 1 + // direction
+		typeLenSize + 8 + // sequence
+		typeLenSize + len(id.Subsequence)*(typeLenSize+4) + // subsequence
+		typeLenSize + 8 + 4 // timestamp
 }
 
 func (e *Encoder) writeMetadata(metadata Metadata) {
-	e.ensureWritable(type_len_size)
+	e.ensureWritable(typeLenSize)
 	e.wrInx += writeType(e.buf(), metadataCodecType)
 	lenIndex := e.wrInx
 	e.wrInx += writeLen(e.buf(), 0) // placeholder for metadata len
 
 	for k, v := range metadata {
-		e.ensureWritable(type_len_size + len(k))
+		e.ensureWritable(typeLenSize + len(k))
 		e.wrInx += writeString(e.buf(), stringCodecType, k)
 
-		e.ensureWritable(type_len_size + len(v))
+		e.ensureWritable(typeLenSize + len(v))
 		e.wrInx += writeString(e.buf(), stringCodecType, v)
 	}
 
@@ -261,26 +261,26 @@ func (e *Encoder) writeMetadata(metadata Metadata) {
 }
 
 func computeMetadataSize(metadata Metadata) int {
-	size := type_len_size // metadata
+	size := typeLenSize // metadata
 	for k, v := range metadata {
-		size += type_len_size + len(k) + // key
-			type_len_size + len(v) // value
+		size += typeLenSize + len(k) + // key
+			typeLenSize + len(v) // value
 	}
 	return size
 }
 
 func (e *Encoder) writeProtocol(protocol Protocol) {
-	e.ensureWritable(type_len_size + len(protocol))
+	e.ensureWritable(typeLenSize + len(protocol))
 	e.wrInx += writeProtocol(e.buf(), protocol)
 }
 
 func computeProtocolSize(protocol Protocol) int {
-	return type_len_size + len(protocol)
+	return typeLenSize + len(protocol)
 }
 
 func (e *Encoder) writeBody(body []byte, bodyCodecType codecType) {
 	bodyLen := len(body)
-	e.ensureWritable(type_len_size + bodyLen)
+	e.ensureWritable(typeLenSize + bodyLen)
 	e.wrInx += writeType(e.buf(), bodyCodecType)
 	e.wrInx += writeLen(e.buf(), bodyLen)
 	copied := copy(e.buf(), body)
@@ -292,27 +292,27 @@ func (e *Encoder) writeBody(body []byte, bodyCodecType codecType) {
 }
 
 func computeBodySize(body []byte) int {
-	return type_len_size + len(body)
+	return typeLenSize + len(body)
 }
 
 func (e *Encoder) writeMessageType(messageType string) {
-	e.ensureWritable(type_len_size + len(messageType))
+	e.ensureWritable(typeLenSize + len(messageType))
 	e.wrInx += writeString(e.buf(), messageTypeCodecType, messageType)
 }
 
 func computeMessageTypeSize(messageType string) int {
-	return type_len_size + len(messageType)
+	return typeLenSize + len(messageType)
 }
 
 func (e *Encoder) writeEventId(id *EventID) {
 	if id == nil {
 		return
 	}
-	payloadLen := (type_len_size + len(id.ID)) +
-		(type_len_size + len(id.Book)) +
-		(type_len_size + len(id.Scope)) +
-		(type_len_size + 8 + 4)
-	totalLength := type_len_size + payloadLen
+	payloadLen := (typeLenSize + len(id.ID)) +
+		(typeLenSize + len(id.Book)) +
+		(typeLenSize + len(id.Scope)) +
+		(typeLenSize + 8 + 4)
+	totalLength := typeLenSize + payloadLen
 	e.ensureWritable(totalLength)
 	e.wrInx += writeType(e.buf(), eventIdCodecType)
 	e.wrInx += writeLen(e.buf(), payloadLen)
@@ -328,9 +328,9 @@ func computeEventIdSize(id *EventID) int {
 		return 0
 	}
 
-	return type_len_size + // event id
-		type_len_size + len(id.ID) + // id
-		type_len_size + len(id.Book) + // book
-		type_len_size + len(id.Scope) + // scope
-		type_len_size + 8 + 4 // timestamp
+	return typeLenSize + // event id
+		typeLenSize + len(id.ID) + // id
+		typeLenSize + len(id.Book) + // book
+		typeLenSize + len(id.Scope) + // scope
+		typeLenSize + 8 + 4 // timestamp
 }
