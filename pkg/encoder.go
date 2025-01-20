@@ -18,7 +18,7 @@ package transport
 import "fmt"
 
 const (
-	unsetGroup       int = -1
+	unsetGroup     int = -1
 	typeLenSize    int = 1 + 4
 	batchStartSize int = typeLenSize * 2
 	groupStartSize int = typeLenSize * 2
