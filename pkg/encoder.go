@@ -169,7 +169,7 @@ func (e *Encoder) writeParsedMessage(message ParsedMessage) {
 	e.writeMetadata(message.Metadata)
 	e.writeProtocol(message.Protocol)
 	e.writeMessageType(message.MessageType)
-	e.writeBody(message.CborBody, parsedBodyCodecType)
+	e.writeBody(message.Body, parsedBodyCodecType)
 	e.writeEventId(message.EventID)
 
 	_ = writeLen(e.dst[lenIndex:], e.wrInx-lenIndex-lengthSize)

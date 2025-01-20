@@ -17,7 +17,7 @@ package transport_test
 
 import (
 	"github.com/stretchr/testify/assert"
-	"github.com/th2-net/transport-go/pkg"
+	transport "github.com/th2-net/transport-go/pkg"
 
 	"testing"
 	"time"
@@ -193,7 +193,7 @@ func TestEncoder_EncodeParsed(t *testing.T) {
 		Metadata: map[string]string{
 			"key": "value",
 		},
-		CborBody: []byte{41, 42, 43, 44, 45},
+		Body: []byte{41, 42, 43, 44, 45},
 	}, 0)
 	res := e.CompleteBatch("group", "book")
 
