@@ -16,10 +16,11 @@
 package transport_test
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/th2-net/transport-go/pkg"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	transport "github.com/th2-net/transport-go/pkg"
 )
 
 func TestEncodeDecode(t *testing.T) {
@@ -114,7 +115,7 @@ func TestEncodeDecode(t *testing.T) {
 						Metadata: map[string]string{
 							"key": "value",
 						},
-						CborBody: []byte("test_data"),
+						Body: []byte("test_data"),
 					},
 				},
 			},
@@ -138,7 +139,7 @@ func TestEncodeDecode(t *testing.T) {
 						Metadata: map[string]string{
 							"key": "value",
 						},
-						CborBody: []byte("test_data"),
+						Body: []byte("test_data"),
 					},
 				},
 			},
@@ -161,7 +162,7 @@ func TestEncodeDecode(t *testing.T) {
 						Metadata: map[string]string{
 							"key": "value",
 						},
-						CborBody: []byte("test_data"),
+						Body: []byte("test_data"),
 					},
 				},
 				{
@@ -179,7 +180,7 @@ func TestEncodeDecode(t *testing.T) {
 						Metadata: map[string]string{
 							"key": "value",
 						},
-						CborBody: []byte("test_data"),
+						Body: []byte("test_data"),
 					},
 				},
 			},
@@ -202,7 +203,7 @@ func TestEncodeDecode(t *testing.T) {
 						Metadata: map[string]string{
 							"key": "value",
 						},
-						CborBody: []byte("test_data"),
+						Body: []byte("test_data"),
 					},
 				},
 				{
@@ -220,7 +221,7 @@ func TestEncodeDecode(t *testing.T) {
 						Metadata: map[string]string{
 							"key": "value",
 						},
-						CborBody: []byte("test_data"),
+						Body: []byte("test_data"),
 					},
 				},
 			},

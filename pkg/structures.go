@@ -37,7 +37,7 @@ type ParsedMessage struct {
 	Metadata    Metadata
 	Protocol    Protocol
 	MessageType string
-	CborBody    []byte
+	Body        []byte
 	EventID     *EventID
 }
 
