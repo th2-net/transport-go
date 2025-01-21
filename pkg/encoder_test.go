@@ -43,8 +43,7 @@ func TestEncoder_EncodeRaw(t *testing.T) {
 		},
 		Body: []byte{41, 42, 43, 44, 45},
 	}
-	sizeAfterEncode := e.SizeAfterEncodeRaw(group, book, rawMsg, 0)
-	msgSize := transport.SizeEncodedRaw(group, book, rawMsg)
+	size := e.SizeAfterEncodeRaw(group, book, rawMsg, 0)
 	e.EncodeRaw(rawMsg, 0)
 	res := e.CompleteBatch(group, book)
 
@@ -99,8 +98,7 @@ func TestEncoder_EncodeRaw(t *testing.T) {
 	}
 
 	assert.Equal(t, expected, res)
-	assert.Equal(t, len(expected), sizeAfterEncode)
-	assert.Equal(t, sizeAfterEncode, msgSize)
+	assert.Equal(t, len(expected), size)
 }
 
 func TestEncoder_EncodeRawWithEventId(t *testing.T) {
@@ -119,8 +117,7 @@ func TestEncoder_EncodeRawWithEventId(t *testing.T) {
 		},
 		Body: []byte{41, 42, 43, 44, 45},
 	}
-	sizeAfterEncode := e.SizeAfterEncodeRaw(group, book, rawMsg, 0)
-	msgSize := transport.SizeEncodedRaw(group, book, rawMsg)
+	size := e.SizeAfterEncodeRaw(group, book, rawMsg, 0)
 	e.EncodeRaw(rawMsg, 0)
 	res := e.CompleteBatch(group, book)
 
@@ -190,8 +187,35 @@ func TestEncoder_EncodeRawWithEventId(t *testing.T) {
 	}
 
 	assert.Equal(t, expected, res)
-	assert.Equal(t, len(expected), sizeAfterEncode)
-	assert.Equal(t, sizeAfterEncode, msgSize)
+	assert.Equal(t, len(expected), size)
+}
+
+func Test_SizeEncodedRaw(t *testing.T) {
+	e := transport.NewEncoder(nil)
+	rawMsg := transport.RawMessage{
+		MessageId: transport.MessageId{
+			SessionAlias: "alias",
+			Sequence:     42,
+			Direction:    transport.OutgoingDirection,
+			Timestamp:    transport.TimestampFromTime(time.UnixMilli(1682420400000)),
+		},
+		Protocol: "protocol",
+		Metadata: map[string]string{
+			"key": "value",
+		},
+		EventID: &transport.EventID{
+			ID:        "test-id",
+			Book:      book,
+			Scope:     "test-scope",
+			Timestamp: transport.TimestampFromTime(time.UnixMilli(1682420400000)),
+		},
+		Body: []byte{41, 42, 43, 44, 45},
+	}
+	e.EncodeRaw(rawMsg, 0)
+	res := e.CompleteBatch(group, book)
+	size := transport.SizeEncodedRaw(group, book, rawMsg)
+
+	assert.Equal(t, size, len(res))
 }
 
 func TestEncoder_EncodeParsed(t *testing.T) {
@@ -210,8 +234,7 @@ func TestEncoder_EncodeParsed(t *testing.T) {
 		},
 		Body: []byte{41, 42, 43, 44, 45},
 	}
-	sizeAfterEncode := e.SizeAfterEncodeParsed(group, book, parsedMsg, 0)
-	msgSize := transport.SizeEncodedParsed(group, book, parsedMsg)
+	size := e.SizeAfterEncodeParsed(group, book, parsedMsg, 0)
 	e.EncodeParsed(parsedMsg, 0)
 	res := e.CompleteBatch(group, book)
 
@@ -281,8 +304,36 @@ func TestEncoder_EncodeParsed(t *testing.T) {
 	}
 
 	assert.Equal(t, expected, res)
-	assert.Equal(t, len(expected), sizeAfterEncode)
-	assert.Equal(t, sizeAfterEncode, msgSize)
+	assert.Equal(t, len(expected), size)
+}
+
+func Test_SizeEncodedParsed(t *testing.T) {
+	e := transport.NewEncoder(nil)
+	parsedMsg := transport.ParsedMessage{
+		MessageId: transport.MessageId{
+			SessionAlias: "alias",
+			Sequence:     42,
+			Direction:    transport.OutgoingDirection,
+			Timestamp:    transport.TimestampFromTime(time.UnixMilli(1682420400000)),
+			Subsequence:  []int32{1, 2},
+		},
+		Protocol:    "protocol",
+		MessageType: "MessageType",
+		Metadata: map[string]string{
+			"key": "value",
+		},
+		EventID: &transport.EventID{
+			ID:        "test-id",
+			Book:      book,
+			Scope:     "test-scope",
+			Timestamp: transport.TimestampFromTime(time.UnixMilli(1682420400000)),
+		},
+		Body: []byte{41, 42, 43, 44, 45},
+	}
+	e.EncodeParsed(parsedMsg, 0)
+	res := e.CompleteBatch(group, book)
+	size := transport.SizeEncodedParsed(group, book, parsedMsg)
+	assert.Equal(t, size, len(res))
 }
 
 func TestEncoder_EncodeTwoMsgIntoSingleGroup(t *testing.T) {
@@ -315,7 +366,7 @@ func TestEncoder_EncodeTwoMsgIntoSingleGroup(t *testing.T) {
 		Body: []byte{41, 42, 43, 44, 45},
 	}
 	e.EncodeRaw(rawMsg, 0)
-	sizeAfterEncode := e.SizeAfterEncodeParsed(group, book, parsedMsg, 0)
+	size := e.SizeAfterEncodeParsed(group, book, parsedMsg, 0)
 	e.EncodeParsed(parsedMsg, 0)
 	res := e.CompleteBatch(group, book)
 
@@ -414,7 +465,7 @@ func TestEncoder_EncodeTwoMsgIntoSingleGroup(t *testing.T) {
 	}
 
 	assert.Equal(t, expected, res)
-	assert.Equal(t, len(expected), sizeAfterEncode)
+	assert.Equal(t, len(expected), size)
 }
 
 func TestEncoder_EncodeTwoMsgIntoSeparateGroups(t *testing.T) {
@@ -447,7 +498,7 @@ func TestEncoder_EncodeTwoMsgIntoSeparateGroups(t *testing.T) {
 		Body: []byte{41, 42, 43, 44, 45},
 	}
 	e.EncodeRaw(rawMsg, 0)
-	sizeAfterEncode := e.SizeAfterEncodeParsed(group, book, parsedMsg, 1)
+	size := e.SizeAfterEncodeParsed(group, book, parsedMsg, 1)
 	e.EncodeParsed(parsedMsg, 1)
 	res := e.CompleteBatch(group, book)
 
@@ -551,7 +602,7 @@ func TestEncoder_EncodeTwoMsgIntoSeparateGroups(t *testing.T) {
 	}
 
 	assert.Equal(t, expected, res)
-	assert.Equal(t, len(expected), sizeAfterEncode)
+	assert.Equal(t, len(expected), size)
 }
 
 func TestEncoder_CompleteBatch(t *testing.T) {
