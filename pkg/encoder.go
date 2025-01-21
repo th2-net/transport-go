@@ -68,16 +68,16 @@ func (e *Encoder) EncodeRaw(message RawMessage, groupId int) {
 	e.writeRawMessage(message)
 }
 
-func (e *Encoder) SizeAfterEncodeRaw(group string, book string, message RawMessage, groupId int) int {
+func (e *Encoder) SizeAfterEncodeRaw(group, book string, message RawMessage, groupId int) int {
 	return e.computeBaseSize(groupId) +
-		typeLenSize + // rew message
-		computeMessageIdSize(message.MessageId) +
-		computeMetadataSize(message.Metadata) +
-		computeProtocolSize(message.Protocol) +
-		computeBodySize(message.Body) +
-		computeEventIdSize(message.EventID) +
+		computeRawSize(message) +
 		typeLenSize + len(book) +
 		typeLenSize + len(group)
+}
+
+func SizeEncodedRaw(group, book string, message RawMessage) int {
+	return computeBatchOverheadSize(group, book) +
+		computeRawSize(message)
 }
 
 func (e *Encoder) EncodeParsed(message ParsedMessage, groupId int) {
@@ -85,17 +85,35 @@ func (e *Encoder) EncodeParsed(message ParsedMessage, groupId int) {
 	e.writeParsedMessage(message)
 }
 
-func (e *Encoder) SizeAfterEncodeParsed(group string, book string, message ParsedMessage, groupId int) int {
+func (e *Encoder) SizeAfterEncodeParsed(group, book string, message ParsedMessage, groupId int) int {
 	return e.computeBaseSize(groupId) +
-		typeLenSize + // parsed message
+		computeParsedSize(message) +
+		typeLenSize + len(book) +
+		typeLenSize + len(group)
+}
+
+func SizeEncodedParsed(group, book string, message ParsedMessage) int {
+	return computeBatchOverheadSize(group, book) +
+		computeParsedSize(message)
+}
+
+func computeRawSize(message RawMessage) int {
+	return typeLenSize + // rew message
+		computeMessageIdSize(message.MessageId) +
+		computeMetadataSize(message.Metadata) +
+		computeProtocolSize(message.Protocol) +
+		computeBodySize(message.Body) +
+		computeEventIdSize(message.EventID)
+}
+
+func computeParsedSize(message ParsedMessage) int {
+	return typeLenSize + // parsed message
 		computeMessageIdSize(message.MessageId) +
 		computeMetadataSize(message.Metadata) +
 		computeProtocolSize(message.Protocol) +
 		computeMessageTypeSize(message.MessageType) +
 		computeBodySize(message.Body) +
-		computeEventIdSize(message.EventID) +
-		typeLenSize + len(book) +
-		typeLenSize + len(group)
+		computeEventIdSize(message.EventID)
 }
 
 func (e *Encoder) initBatchAndGroup(groupId int) {
@@ -122,6 +140,13 @@ func (e *Encoder) computeBaseSize(groupId int) int {
 		size += groupStartSize
 	}
 	return size
+}
+
+func computeBatchOverheadSize(group, book string) int {
+	return batchStartSize +
+		groupStartSize +
+		typeLenSize + len(book) +
+		typeLenSize + len(group)
 }
 
 func (e *Encoder) buf() []byte {
