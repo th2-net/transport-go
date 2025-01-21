@@ -92,7 +92,7 @@ func (e *Encoder) SizeAfterEncodeParsed(group string, book string, message Parse
 		computeMetadataSize(message.Metadata) +
 		computeProtocolSize(message.Protocol) +
 		computeMessageTypeSize(message.MessageType) +
-		computeBodySize(message.CborBody) +
+		computeBodySize(message.Body) +
 		computeEventIdSize(message.EventID) +
 		typeLenSize + len(book) +
 		typeLenSize + len(group)
@@ -208,7 +208,7 @@ func (e *Encoder) writeParsedMessage(message ParsedMessage) {
 	e.writeMetadata(message.Metadata)
 	e.writeProtocol(message.Protocol)
 	e.writeMessageType(message.MessageType)
-	e.writeBody(message.CborBody, parsedBodyCodecType)
+	e.writeBody(message.Body, parsedBodyCodecType)
 	e.writeEventId(message.EventID)
 
 	_ = writeLen(e.dst[lenIndex:], e.wrInx-lenIndex-lengthSize)

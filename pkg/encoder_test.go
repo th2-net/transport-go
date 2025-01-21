@@ -204,7 +204,7 @@ func TestEncoder_EncodeParsed(t *testing.T) {
 		Metadata: map[string]string{
 			"key": "value",
 		},
-		CborBody: []byte{41, 42, 43, 44, 45},
+		Body: []byte{41, 42, 43, 44, 45},
 	}
 	size := e.SizeAfterEncodeParsed(group, book, parsedMsg, 0)
 	e.EncodeParsed(parsedMsg, 0)
@@ -306,7 +306,7 @@ func TestEncoder_EncodeTwoMsgIntoSingleGroup(t *testing.T) {
 		Metadata: map[string]string{
 			"key": "value",
 		},
-		CborBody: []byte{41, 42, 43, 44, 45},
+		Body: []byte{41, 42, 43, 44, 45},
 	}
 	e.EncodeRaw(rawMsg, 0)
 	size := e.SizeAfterEncodeParsed(group, book, parsedMsg, 0)
@@ -438,7 +438,7 @@ func TestEncoder_EncodeTwoMsgIntoSeparateGroups(t *testing.T) {
 		Metadata: map[string]string{
 			"key": "value",
 		},
-		CborBody: []byte{41, 42, 43, 44, 45},
+		Body: []byte{41, 42, 43, 44, 45},
 	}
 	e.EncodeRaw(rawMsg, 0)
 	size := e.SizeAfterEncodeParsed(group, book, parsedMsg, 1)

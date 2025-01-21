@@ -44,7 +44,7 @@ var parsedPool = sync.Pool{
 
 func getParsed() *ParsedMessage {
 	p := parsedPool.Get().(*ParsedMessage)
-	p.CborBody = nil
+	p.Body = nil
 	p.MessageId.Subsequence = nil
 	p.Metadata = nil
 	return p
@@ -187,7 +187,7 @@ func decodeParsedMessage(src []byte) (*ParsedMessage, error) {
 		case messageTypeCodecType:
 			message.MessageType = string(partBytes)
 		case parsedBodyCodecType:
-			message.CborBody = partBytes
+			message.Body = partBytes
 		case eventIdCodecType:
 			message.EventID = decodeEventId(partBytes)
 		}
